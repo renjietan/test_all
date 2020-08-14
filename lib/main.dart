@@ -1,8 +1,71 @@
+import 'dart:convert';
+import 'dart:isolate';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_picker/flutter_picker.dart';
+import 'package:selection_menu/selection_menu.dart';
+import 'package:test_all/IsolatePage/IsolatePage.dart';
 import 'package:test_all/bloc/index.dart';
+import 'package:test_all/tab/homePage.dart';
 
 void main() {
   runApp(MyApp());
+  run1();
+}
+
+void run1() async {
+  // 第3步：编写回调Port
+  ReceivePort receivePort = new ReceivePort();
+  await Isolate.spawn(echo, receivePort.sendPort);
+
+  // 第6步：保存隔离线程回调Port
+  var sendPort = await receivePort.first;
+  // 第7步：发送消息
+  var msg;
+  // print('received $msg');
+
+  msg = await sendReceive(sendPort, "foo");
+  for (int i = 0; i < 10; i++) {}
+  // msg = await sendReceive(sendPort, "bar");
+
+  print('received $msg');
+  // 第6步：保存隔离线程回调Port
+
+  // msg = await sendReceive(sendPort, "bar");
+}
+
+// 第2步：定义隔离线程的入口点
+echo(SendPort sendPort) async {
+  // 第4步：编写回调Port
+  var port = new ReceivePort();
+
+  // 第5步：告诉主线程回调入口点
+  sendPort.send(port.sendPort);
+
+  // 第8步：循环接收消息
+  await for (var msg in port) {
+    // 数组 msg[0] 是数据
+    var data = msg[0];
+    // 数组 msg[1] 是发送方Port
+    SendPort replyTo = msg[1];
+    // 回传发送方 数据
+    replyTo.send(data);
+
+    // 如果数据时 bar 关闭当前回调
+    if (data == "bar") port.close();
+  }
+}
+
+/*
+主线程 发送消息函数
+数组 msg[0] 是数据
+数组 msg[1] 是发送方Port
+返回 隔离线程 Port
+*/
+Future sendReceive(SendPort port, msg) {
+  ReceivePort response = new ReceivePort();
+  port.send([msg, response.sendPort]);
+  return response.first;
 }
 
 class MyApp extends StatelessWidget {
@@ -30,49 +93,8 @@ class MyApp extends StatelessWidget {
       home: MyHomePage(title: 'Flutter Demo Home Page'),
       routes: {
         "/bloc_page": (BuildContext context) => BlocPage(),
+        "/isolate_page": (BuildContext context) => IsolatePage1(),
       },
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            InkWell(
-              onTap: () {
-                Navigator.of(context).pushNamed("/bloc_page");
-              },
-              child: Text("bloc"),
-            )
-          ],
-        ),
-      ),
     );
   }
 }

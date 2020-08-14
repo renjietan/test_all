@@ -3,7 +3,6 @@ import 'dart:isolate';
 
 // 第1步：定义主线程
 main() async {
-  int i = 0;
   // 第3步：编写回调Port
   ReceivePort receivePort = new ReceivePort();
   await Isolate.spawn(echo, receivePort.sendPort);
@@ -12,13 +11,14 @@ main() async {
   var sendPort = await receivePort.first;
 
   // 第7步：发送消息
-  var msg = await sendReceive(sendPort, "foo");
+  var msg;
   // print('received $msg');
-  msg = await sendReceive(sendPort, "bar");
-  // while (i == 10) {
-  //   msg = awai
-  // }
-  // print('received $msg');
+  for (int i = 0; i < 10; i++) {
+    msg = await sendReceive(sendPort, "foo");
+  }
+  // msg = await sendReceive(sendPort, "bar");
+
+  print('received $msg');
 }
 
 // 第2步：定义隔离线程的入口点
@@ -36,7 +36,6 @@ echo(SendPort sendPort) async {
     // 数组 msg[1] 是发送方Port
     SendPort replyTo = msg[1];
     // 回传发送方 数据
-    print(msg);
     replyTo.send(data);
     // 如果数据时 bar 关闭当前回调
     if (data == "bar") port.close();
