@@ -47,6 +47,8 @@ class _MainHomePageState extends State<MainHomePage> {
   @override
   void initState() {
     // BlueUtils.init();
+    BlueUtils.init();
+    BlueUtils.startBle();
     super.initState();
   }
 

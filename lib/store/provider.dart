@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_blue/flutter_blue.dart';
 import 'package:provider/provider.dart';
 
 import '../utils/sputils.dart';
@@ -17,7 +18,9 @@ class Store {
         ChangeNotifierProvider.value(value: AppStatus(TAB_HOME_INDEX)),
         ChangeNotifierProvider.value(
           value: BlueStatus(0),
-        )
+        ),
+        ChangeNotifierProvider.value(value: BlueData("0")),
+        ChangeNotifierProvider.value(value: DeviceList({})),
       ],
       child: child,
     );
@@ -71,6 +74,35 @@ class AppStatus with ChangeNotifier {
 
   set tabIndex(int index) {
     _tabIndex = index;
+    notifyListeners();
+  }
+}
+
+///蓝牙数据
+class BlueData with ChangeNotifier {
+  //主页tab的索引
+  String _blueData;
+
+  BlueData(this._blueData);
+
+  String get blueData => _blueData;
+
+  set blueData(String blueData) {
+    _blueData = blueData;
+    notifyListeners();
+  }
+}
+
+class DeviceList with ChangeNotifier {
+  //主页tab的索引
+  Map<String, ScanResult> _deviceList;
+
+  DeviceList(this._deviceList);
+
+  Map<String, ScanResult> get deviceList => _deviceList;
+
+  set deviceList(Map<String, ScanResult> deviceList) {
+    _deviceList = deviceList;
     notifyListeners();
   }
 }

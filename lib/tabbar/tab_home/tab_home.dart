@@ -5,6 +5,7 @@ import 'package:flutter_appclient/mobileUI/Notify/SimpleNotify.dart';
 import 'package:flutter_appclient/mobileUI/call/callpage.dart';
 import 'package:flutter_appclient/mobileUI/searchPage/searchPage.dart';
 import 'package:flutter_appclient/page/blue/blue.dart';
+import 'package:flutter_appclient/store/provider.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
 import 'package:flutter_easyrefresh/material_footer.dart';
 import 'package:flutter_easyrefresh/material_header.dart';
@@ -19,6 +20,7 @@ import 'package:flutter_appclient/page/test/SumSimpleWidget.dart';
 import 'package:flutter_appclient/page/test/test.dart';
 import 'package:flutter_appclient/page/test/stickyPage.dart';
 import 'package:flutter_appclient/router/router.dart';
+import 'package:provider/provider.dart';
 // import 'package:permission_handler/permission_handler.dart';
 
 const double boxSize = 40.0;
@@ -53,6 +55,22 @@ class _TabHomeState extends State<TabHome> {
           SliverList(
             delegate: SliverChildListDelegate(
               <Widget>[
+                Consumer(
+                  builder: (
+                    BuildContext context,
+                    BlueData data,
+                    Widget child,
+                  ) {
+                    return Center(
+                      child: Text(
+                        "${data.blueData}",
+                        style: TextStyle(
+                          fontSize: 30,
+                        ),
+                      ),
+                    );
+                  },
+                ),
                 SizedBox(
                   height: 10,
                 ),
