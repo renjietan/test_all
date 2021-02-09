@@ -18,30 +18,22 @@ class Blue extends StatefulWidget {
 }
 
 class _BlueState extends State<Blue> {
+  Timer _timer;
+  List<BluetoothDevice> _connectedDevices = [];
   @override
   void dispose() {
-    // TODO: implement dispose
     // _timer.cancel();
-    // BlueUtils.flutterBlue.stopScan();
-    // BlueUtils.device?.disconnect();
     super.dispose();
   }
 
   @override
   void initState() {
-    // BlueUtils.init();
-    // BlueUtils.startBle();
-    // _autoConnTimer = Timer.periodic(Duration(seconds: 10), (res) {
-
-    // });
-    // BlueUtils.getBleScanNameAry();
-    // _timer = Timer.periodic(Duration(seconds: 1), (res) {
-    //   // _autoConnTimer.cancel();
+    // _timer = Timer.periodic(Duration(seconds: 1), (res) async {
+    //   List<BluetoothDevice> connectedDevices =
+    //       await BlueUtils.flutterBlue.connectedDevices;
     //   setState(() {
-    //     _devicesList = BlueUtils.allBlueDevice.keys.toList();
+    //     _connectedDevices = connectedDevices;
     //   });
-    //   // print(BlueUtils.allBlueDevice);
-    //   // print(BlueUtils.scanResults);
     // });
 
     super.initState();
@@ -57,33 +49,54 @@ class _BlueState extends State<Blue> {
         builder: (BuildContext context, DeviceList deviceList, Widget child) {
           return ListView.builder(
             itemBuilder: (BuildContext context, int index) {
+              BluetoothDevice devices =
+                  deviceList.deviceList.values.toList()[index].device;
+              bool isContains = _connectedDevices
+                      .where((item) => item.id.id == devices.id.id)
+                      .length >
+                  0;
               return InkWell(
                 onTap: () async {
-                  String id =
-                      "${deviceList.deviceList.values.toList()[index].device.id.id}";
-                  await BlueUtils.flutterBlue.connectedDevices.then((connList) {
-                    print(connList);
-                    if (connList.length == 0) {
-                      BlueUtils.connectionBle(id);
-                    } else {
-                      connList[0].disconnect().then((res) {
-                        BlueUtils.connectionBle(id);
-                      });
-                    }
-                    print(connList);
-                    //
-                  });
+                  String id = "${devices.id.id}";
+                  BlueUtils.connectionBle(id);
+                  // await BlueUtils.flutterBlue.connectedDevices.then((connList) {
+                  //   if (connList.length == 0) {
+
+                  //   } else {
+                  //     BlueUtils.connectionBle(id);
+                  //   }
+
+                  //   //
+                  // });
                 },
                 child: Container(
-                  height: ScreenUtil().setHeight(80),
+                  // height: ScreenUtil().setHeight(80),
                   alignment: Alignment.centerLeft,
                   decoration: BoxDecoration(
                     boxShadow: [BaseConfig.baseBoxShadow],
                   ),
-                  child: Column(
+                  padding: EdgeInsets.fromLTRB(
+                    ScreenUtil().setWidth(20),
+                    ScreenUtil().setWidth(10),
+                    ScreenUtil().setWidth(20),
+                    ScreenUtil().setWidth(10),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                          "${deviceList.deviceList.values.toList()[index].device.name}"),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("${devices.name}"),
+                          SizedBox(
+                            height: 3,
+                          ),
+                          Text("${devices.id.id}"),
+                        ],
+                      ),
+                      Container(
+                        child: Text("${isContains ? '已连接' : ''}"),
+                      ),
                     ],
                   ),
                 ),

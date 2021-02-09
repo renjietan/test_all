@@ -12,7 +12,7 @@ class BlueUtils {
   static Map<String, ScanResult> scanResults;
   static Map allBlueDevice;
   static BluetoothCharacteristic mCharacteristic;
-
+  static Map<int, dynamic> test;
   static init() {
     BluetoothDevice device;
     flutterBlue = FlutterBlue.instance;
@@ -22,84 +22,65 @@ class BlueUtils {
     scanResults = new Map();
     allBlueDevice = {};
     mCharacteristic = mCharacteristic;
+    test = {};
   }
 
-  static startBle() {
+  static startBle() async {
     // timeout: Duration(seconds: 60)
-    flutterBlue.stopScan().then((res) {
-      flutterBlue.startScan();
-      flutterBlue.scanResults.listen((results) {
-        for (ScanResult r in results) {
-          if (r.device.name.length > 0 ||
-              r.device.type == BluetoothDeviceType.le) {
-            scanResults[r.device.id.id] = r;
-            Provider.of<DeviceList>(BaseConfig.navigatorKey.currentContext,
-                    listen: false)
-                .deviceList = scanResults;
-            // allBlueDevice.add(r.device.name);
-            // allBlueDevice["${r.device.name}"] = "${r.device.id.id}";
-            // getBleScanNameAry();
-          }
+    await flutterBlue.stopScan();
+    flutterBlue.startScan(timeout: Duration(seconds: 4));
+    flutterBlue.scanResults.listen((results) {
+      List keys = test.keys.toList();
+      test[keys.length] =
+          "${DateTime.now().hour}-${DateTime.now().minute}-${DateTime.now().second}";
+      print(test);
+      for (ScanResult r in results) {
+        if (r.device.name.length > 0 ||
+            r.device.type == BluetoothDeviceType.le) {
+          scanResults[r.device.id.id] = r;
+          Provider.of<DeviceList>(BaseConfig.navigatorKey.currentContext,
+                  listen: false)
+              .deviceList = scanResults;
         }
-        String deviceId = SPUtils.getblueId();
-        if (deviceId == "") {
-          return;
-        }
-        ScanResult cr;
-        if (scanResults.containsKey("$deviceId")) {
+      }
+      String deviceId = SPUtils.getblueId();
+      if (deviceId == "") {
+        return;
+      }
+      ScanResult cr;
+      if (scanResults.containsKey("$deviceId")) {
+        if (scanResults["$deviceId"].device.name == "MEDXING-IRT") {
           cr = scanResults["$deviceId"];
         }
-        // allBlueDevice.forEach((key, value) {
-        //   if (value == deviceId) {
-        //     cr = scanResults[key];
-        //   }
-        // });
+      }
+      // allBlueDevice.forEach((key, value) {
+      //   if (value == deviceId) {
+      //     cr = scanResults[key];
+      //   }
+      // });
 
-        if (cr != null && device == null) {
-          device = cr.device;
-          // device.disconnect().then((res) {
-          //   discoverServicesBle();
-          // }).catchError((err) {
-          //   print(err);
-          // });
-          discoverServicesBle();
-        }
-      });
+      if (cr != null && device == null) {
+        device = cr.device;
+        discoverServicesBle();
+      }
     });
   }
 
   static connectionBle(String blueID) {
-    // device?.disconnect().then((res) {
-    //   ScanResult r = scanResults[allBlueDevice.keys.toList()[blueIndex]];
-    //   device = r.device;
-    //   SPUtils.saveBlueId(device.id.id);
-    //   // 停止扫描
-    //   // flutterBlue.stopScan();
-
-    //   discoverServicesBle();
-    // });
     ScanResult r = scanResults[blueID];
     device = r.device;
     SPUtils.saveBlueId(device.id.id);
     // 停止扫描
     // flutterBlue.stopScan();
-
-    discoverServicesBle();
+    if (device.id.id != r.device.id.id && device.name != r.device.name) {
+      discoverServicesBle();
+    }
   }
 
   static discoverServicesBle() async {
-    await device
-        .connect(autoConnect: false, timeout: Duration(seconds: 10))
-        .then((res) {})
-        .catchError((err) {
-      print(err);
-    });
-    // device.state.listen((BluetoothDeviceState status) async {
-    //   print("状态：${status}");
-    //   if (status == BluetoothDeviceState.disconnected) {
-    //     await mCharacteristic.setNotifyValue(false);
-    //   } else if (status == BluetoothDeviceState.connected) {}
-    // });
+    await device?.disconnect();
+    await device.connect(autoConnect: false, timeout: Duration(seconds: 10));
+
     List<BluetoothService> services = await device.discoverServices();
     // var service = services[0].uuid.toString();
     services.forEach((service) {
@@ -116,16 +97,20 @@ class BlueUtils {
     });
   }
 
+  // device.state.listen((BluetoothDeviceState status) async {
+  //       print("状态：$status");
+  //       if (status == BluetoothDeviceState.disconnected) {
+  //         await mCharacteristic?.setNotifyValue(false);
+  //       }
+  //     });
   static dataCallbackBle() async {
     await mCharacteristic.setNotifyValue(true);
-
     mCharacteristic.value.listen((value) {
       if (value == null) {
         print("我是蓝牙返回数据 - 空！！");
         return;
       }
       List data = [];
-      List data2 = [];
       for (var i = 0; i < value.length; i++) {
         String dataStr = value[i].toRadixString(16);
         if (dataStr.length < 2) {
@@ -133,15 +118,17 @@ class BlueUtils {
         }
         String dataEndStr = "0x" + dataStr;
         data.add(dataEndStr);
-        data2.add(value[i].toRadixString(10));
       }
 
-      if (data2.length >= 14 && data[5] == "0x65") {
-        print("我是蓝牙返回数据 - $data");
-        print("我是蓝牙2返回数据 - ${data2[14]}");
+      if (data.length >= 15 && data[5] == "0x65") {
+        double wd = int.parse(
+                "0x" + data[15].split("0x")[1] + data[14].split("0x")[1]) /
+            10;
+
+        print("温度：$wd");
         Provider.of<BlueData>(BaseConfig.navigatorKey.currentContext,
                 listen: false)
-            .blueData = "${int.parse(data2[14]) / 10}";
+            .blueData = "$wd";
       }
     });
   }

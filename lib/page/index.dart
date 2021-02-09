@@ -1,7 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_appclient/mobileUI/AppBar/simpleAppBar.dart';
-import 'package:flutter_appclient/page/blue/BlueUtils.dart';
-import 'package:flutter_appclient/page/blue/blue.dart';
+
+
 import 'package:flutter_appclient/tabbar/tab_center/tab_center.dart';
 import 'package:flutter_appclient/tabbar/tab_home/tab_home.dart';
 import 'package:flutter_appclient/tabbar/tab_owner/tab_owner.dart';
@@ -9,6 +11,8 @@ import 'package:flutter_appclient/tabbar/tab_test/tab_test.dart';
 import 'package:flutter_appclient/utils/core/click.dart';
 import 'package:flutter_appclient/store/provider.dart';
 import 'package:provider/provider.dart';
+
+import 'blue/BlueUtils.dart';
 
 class MainHomePage extends StatefulWidget {
   MainHomePage({Key key}) : super(key: key);
@@ -43,17 +47,23 @@ class _MainHomePageState extends State<MainHomePage> {
       ];
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
+  Timer _timer;
   @override
   void initState() {
     // BlueUtils.init();
     BlueUtils.init();
     BlueUtils.startBle();
+    // _timer = Timer.periodic(Duration(seconds: 55), (time) {
+    //   // BlueUtils.mCharacteristic
+    //   print(BlueUtils.device);
+    //   // BlueUtils.mCharacteristic?.write([0xFF, 0xFE, 0x04, 0x87, 0x22, 0x61]);
+    // });
     super.initState();
   }
 
   @override
   void dispose() {
+    // _timer.cancel();
     super.dispose();
     // BlueUtils.client?.
   }
